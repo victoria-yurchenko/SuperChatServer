@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v3.1",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v3.1": {
+      "SuperChatServer/1.0.0": {
+        "dependencies": {
+          "ChatDataLibrary": "1.0.0.0"
+        },
+        "runtime": {
+          "SuperChatServer.dll": {}
+        }
+      },
+      "ChatDataLibrary/1.0.0.0": {
+        "runtime": {
+          "ChatDataLibrary.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SuperChatServer/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ChatDataLibrary/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

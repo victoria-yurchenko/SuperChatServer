@@ -29,12 +29,12 @@ namespace SuperChatServer
         private void btListen_Click(object sender, EventArgs e)
         {
             string address = tbAddress.Text.Trim();
-            if( string.IsNullOrEmpty( address ))
+            if (string.IsNullOrEmpty(address))
             {
                 var host = Dns.GetHostEntry(Dns.GetHostName());
-                foreach(var item in host.AddressList)
+                foreach (var item in host.AddressList)
                 {
-                    if(item.AddressFamily == AddressFamily.InterNetwork)
+                    if (item.AddressFamily == AddressFamily.InterNetwork)
                     {
                         address = item.ToString();
                         tbAddress.Text = address;
@@ -55,7 +55,7 @@ namespace SuperChatServer
 
         private void WaitForClientConnect()
         {
-            while(true)
+            while (true)
             {
                 semaphore.WaitOne();
                 Thread thread = new Thread(Dialog);
@@ -68,54 +68,26 @@ namespace SuperChatServer
         {
             TcpClient client = server.AcceptTcpClient();            //app blocks here
             NetworkStream ns = client.GetStream();
-            while(true)
+            while (true)
             {
                 try
                 {
                     StreamReader sr = new StreamReader(ns, Encoding.UTF8);
                     ChatData chatData = (ChatData)formatter.Deserialize(sr.BaseStream);
-                    switch(chatData.Command)
+                    switch (chatData.Command)
                     {
                         case "Register":
                             break;
                         case "Login":
-                            string name = users.Find(n => chatData.FromName == n);
-                            if(string.IsNullOrEmpty(name))
-                            {
-                                users.Add(chatData.FromName);
-                                messages.Add(chatData.FromName, new List<ChatData>());
-                                lbUsers.Items.Add(chatData.FromName);
-                            }
-                            else
-                            {
-                                //TO DO
-                            }
+                            LoginCommand(chatData);
                             break;
                         case "Text":
-                            if(string.IsNullOrEmpty(chatData.ToName))
-                            {
-                                string info = "\r\n" + chatData.FromName + ">>" + chatData.Text +
-                                                                "\t" + DateTime.Now.ToShortTimeString();
-                                this.Invoke((MethodInvoker)delegate ()
-                                {
-                                    tbMessages.Text += info;
-                                });
-
-                                foreach (KeyValuePair<string, List<ChatData>> item in messages)
-                                {
-                                    item.Value.Add(chatData);
-                                }
-                            }
-                            else
-                            {
-                                //process private message - TO DO
-                            }
-                            
+                            TextCommand(chatData);
                             break;
                         case "Data":
                             break;
                         case "Sync":
-
+                            SyncCommand(client);
                             break;
                     }
                 }
@@ -125,6 +97,59 @@ namespace SuperChatServer
                 }
             }
 
+        }
+
+        private void SyncCommand(TcpClient client)
+        {
+            try
+            {
+                NetworkStream ns = client.GetStream();
+                string chatHistory = tbMessages.Text.Trim();
+                ns.Write(Encoding.UTF8.GetBytes(chatHistory), 0, chatHistory.Length);
+                ns.Flush();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void LoginCommand(ChatData chatData)
+        {
+            string name = users.Find(n => chatData.FromName == n);
+            if (string.IsNullOrEmpty(name))
+            {
+                users.Add(chatData.FromName);
+                messages.Add(chatData.FromName, new List<ChatData>());
+                lbUsers.Items.Add(chatData.FromName);
+            }
+            else
+            {
+                //TO DO
+            }
+        }
+
+        private void TextCommand(ChatData chatData)
+        {
+            if (string.IsNullOrEmpty(chatData.ToName))
+            {
+                string info = "\r\n" + DateTime.Now.ToShortTimeString() + "\t" +
+                    chatData.FromName + ">>" + chatData.Text;
+                                                 
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    tbMessages.Text += info;
+                });
+
+                foreach (KeyValuePair<string, List<ChatData>> item in messages)
+                {
+                    item.Value.Add(chatData);
+                }
+            }
+            else
+            {
+                //process private message - TO DO
+            }
         }
 
         private void DownloadData(byte[] data, string fileName)
